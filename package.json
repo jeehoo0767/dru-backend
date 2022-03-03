@@ -1,0 +1,46 @@
+{
+  "name": "what-is-your-disease",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node -r esm src",
+    "test": "nodemon --watch src/ -r esm src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SeongBeom27/What-is-your-disease.git"
+  },
+  "author": "seongbeom",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SeongBeom27/What-is-your-disease/issues"
+  },
+  "homepage": "https://github.com/SeongBeom27/What-is-your-disease#readme",
+  "dependencies": {
+    "@koa/multer": "^3.0.0",
+    "axios": "^0.24.0",
+    "bcrypt": "^5.0.1",
+    "dotenv": "^10.0.0",
+    "eslint-config-prettier": "^8.3.0",
+    "esm": "^3.2.25",
+    "joi": "^17.5.0",
+    "jsonwebtoken": "^8.5.1",
+    "koa": "^2.13.4",
+    "koa-bodyparser": "^4.3.0",
+    "koa-passport": "^4.1.4",
+    "koa-router": "^10.1.1",
+    "koa-session": "^6.2.0",
+    "koa-static": "^5.0.0",
+    "mongoose": "^6.1.1",
+    "multer": "^1.4.4",
+    "nodemon": "^2.0.15",
+    "passport-facebook": "^3.0.0",
+    "passport-google-oauth2": "^0.2.0",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-kakao": "^1.0.1",
+    "passport-naver": "^1.0.6",
+    "rand-token": "^1.0.1",
+    "sanitize-html": "^2.6.1"
+  }
+}
