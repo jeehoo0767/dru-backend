@@ -36,13 +36,13 @@ const removeHtmlAndShorten = (body) => {
   return filtered;
 };
 
-const getOldestPosts = async (ctx, query, page) => {
+export const getOldestPosts = async (ctx, query, page, postNum) => {
   let posts;
   try {
     posts = await Post.find(query)
       .sort({ publishedDate: 1 })
-      .limit(10)
-      .skip((page - 1) * 10)
+      .limit(postNum)
+      .skip((page - 1) * postNum)
       .lean()
       .exec();
   } catch (err) {
@@ -52,13 +52,13 @@ const getOldestPosts = async (ctx, query, page) => {
   return posts;
 };
 
-const getLatestPosts = async (ctx, query, page) => {
+export const getLatestPosts = async (ctx, query, page, postNum) => {
   let posts;
   try {
     posts = await Post.find(query)
       .sort({ publishedDate: -1 })
-      .limit(10)
-      .skip((page - 1) * 10)
+      .limit(postNum)
+      .skip((page - 1) * postNum)
       .lean()
       .exec();
   } catch (e) {
@@ -68,13 +68,13 @@ const getLatestPosts = async (ctx, query, page) => {
   return posts;
 };
 
-const getHotPosts = async (ctx, query, page) => {
+export const getHotPosts = async (ctx, query, page, postNum) => {
   let posts;
   try {
     posts = await Post.find(query)
       .sort({ views: -1 })
-      .limit(10)
-      .skip((page - 1) * 10)
+      .limit(postNum)
+      .skip((page - 1) * postNum)
       .lean()
       .exec();
   } catch (err) {
@@ -84,7 +84,7 @@ const getHotPosts = async (ctx, query, page) => {
 };
 
 /**
- * GET /api/posts/latest?tag=&page=
+ * GET /api/posts/latest?tag=&page=&postNum=
  *
  * @brief     최신 포스트 리스트를 전달
  * @param {*} ctx
@@ -96,6 +96,7 @@ export const latest = async (ctx) => {
   // query 는 문자열이기 때문에 숫자로 변환해주어야합니다.
   // 값이 주어지지 않았다면 1 을 기본으로 사용합니다.
   const page = parseInt(ctx.query.page || '1', 10);
+  const postNum = parseInt(ctx.query.postNum || '10', 10);
 
   if (page < 1) {
     ctx.status = 400;
@@ -111,7 +112,7 @@ export const latest = async (ctx) => {
   };
 
   try {
-    posts = await getLatestPosts(ctx, query, page);
+    posts = await getLatestPosts(ctx, query, page, postNum);
   } catch (err) {
     ctx.throw(500, err);
   }
@@ -132,7 +133,7 @@ export const latest = async (ctx) => {
 };
 
 /**
- * GET /api/posts/hot?tag=&page=
+ * GET /api/posts/hot?tag=&page=&postNum=
  *
  * @brief     인기 포스트 리스트를 전달
  * @param {*} ctx
@@ -144,6 +145,7 @@ export const hot = async (ctx) => {
   // query 는 문자열이기 때문에 숫자로 변환해주어야합니다.
   // 값이 주어지지 않았다면 1 을 기본으로 사용합니다.
   const page = parseInt(ctx.query.page || '1', 10);
+  const postNum = parseInt(ctx.query.postNum || '10', 10);
 
   if (page < 1) {
     ctx.status = 400;
@@ -159,7 +161,7 @@ export const hot = async (ctx) => {
   };
 
   try {
-    posts = await getHotPosts(ctx, query, page);
+    posts = await getHotPosts(ctx, query, page, postNum);
   } catch (err) {
     ctx.throw(500, err);
   }
@@ -180,7 +182,7 @@ export const hot = async (ctx) => {
 };
 
 /**
- * GET /api/posts/user/:userId?page=
+ * GET /api/posts/user/:userId?page=&postNum=
  *
  * @brief     로그인 회원 포스트 리스트를 전달
  * @param {*} ctx
@@ -188,6 +190,7 @@ export const hot = async (ctx) => {
 export const user = async (ctx) => {
   const { userId } = ctx.params;
   const page = parseInt(ctx.query.page || '1', 10);
+  const postNum = parseInt(ctx.query.postNum || '10', 10);
 
   if (page < 1) {
     ctx.status = 400;
@@ -206,7 +209,7 @@ export const user = async (ctx) => {
   };
 
   try {
-    posts = await getLatestPosts(ctx, query, page);
+    posts = await getLatestPosts(ctx, query, page, postNum);
   } catch (e) {
     ctx.throw(500, e);
   }
@@ -227,7 +230,7 @@ export const user = async (ctx) => {
 };
 
 /**
- * GET /api/posts?category=&page=
+ * GET /api/posts?category=&page=&postNum=
  *
  * @brief     로그인 회원 포스트 리스트를 전달
  * @param {*} ctx
@@ -241,6 +244,7 @@ export const category = async (ctx) => {
   }
 
   const page = parseInt(ctx.query.page || '1', 10);
+  const postNum = parseInt(ctx.query.postNum || '10', 10);
 
   if (page < 1) {
     ctx.status = 400;
@@ -255,8 +259,8 @@ export const category = async (ctx) => {
   try {
     posts = await Post.find(query)
       .sort({ publishedDate: -1 })
-      .limit(10)
-      .skip((page - 1) * 10)
+      .limit(postNum)
+      .skip((page - 1) * postNum)
       .lean()
       .exec();
   } catch (e) {
@@ -279,7 +283,7 @@ export const category = async (ctx) => {
 };
 
 /**
- * GET /api/posts/filter/:orderBy?page=
+ * GET /api/posts/filter/:orderBy?page=&postNum=
  *
  * @brief     로그인 회원 포스트 리스트를 전달
  * @param {*} ctx
@@ -288,6 +292,7 @@ export const filter = async (ctx) => {
   const { orderBy } = ctx.params;
 
   const page = parseInt(ctx.query.page || '1', 10);
+  const postNum = parseInt(ctx.query.postNum || '10', 10);
 
   if (page < 1) {
     x44;
@@ -297,29 +302,29 @@ export const filter = async (ctx) => {
 
   let posts, query;
   switch (orderBy) {
-    case '최신순': {
+    case 'latest': {
       try {
         query = {};
-        posts = await getLatestPosts(ctx, query, page);
+        posts = await getLatestPosts(ctx, query, page, postNum);
       } catch (err) {
         ctx.throw(500, err);
       }
       break;
     }
-    case '오래된순': {
+    case 'oldest': {
       try {
         query = {};
-        posts = await getOldestPosts(ctx, query, page);
+        posts = await getOldestPosts(ctx, query, page, postNum);
       } catch (err) {
         ctx.throw(500, err);
       }
       break;
     }
-    case '인기순': {
+    case 'hotest': {
       // 인기순
       try {
         query = {};
-        posts = await getHotPosts(ctx, query, page);
+        posts = await getHotPosts(ctx, query, page, postNum);
       } catch (err) {
         ctx.throw(500, err);
       }
@@ -331,6 +336,48 @@ export const filter = async (ctx) => {
   }
 
   const postCount = await Post.countDocuments(query).exec();
+  const responseData = {
+    postTotalCnt: postCount,
+    data: {
+      post: posts.map((post) => ({
+        ...post,
+        body: removeHtmlAndShorten(post.body),
+      })),
+    },
+  };
+
+  ctx.body = responseData;
+};
+
+/**
+ * GET /api/posts/user/:userId?page=&postNum=
+ *
+ * @brief     로그인 회원 포스트 리스트를 전달
+ * @param {*} ctx
+ */
+export const follow = async (ctx) => {
+  const page = parseInt(ctx.query.page || '1', 10);
+  const postNum = parseInt(ctx.query.postNum || '10', 10);
+  let posts;
+
+  if (page < 1) {
+    ctx.status = 400;
+    return;
+  }
+  const followIds = [...ctx.state.user.followingIds];
+
+  const query = {
+    'user._id': { $in: followIds },
+  };
+
+  try {
+    posts = await getLatestPosts(ctx, query, page, postNum);
+  } catch (e) {
+    ctx.throw(500, e);
+  }
+
+  const postCount = await Post.countDocuments(query).exec();
+
   const responseData = {
     postTotalCnt: postCount,
     data: {

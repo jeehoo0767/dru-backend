@@ -1,7 +1,6 @@
 import Post from '../../models/post';
 import User from '../../models/user';
 import Comment from '../../models/comment';
-import Reply from '../../models/reply';
 import mongoose from 'mongoose';
 import sanitizeHtml from 'sanitize-html';
 
@@ -79,13 +78,15 @@ export const checkOwnPost = (ctx, next) => {
 export const read = async (ctx) => {
   const post = ctx.state.post;
 
+  const commentsNum = 10;
+  let commentCount;
   const cpage = parseInt(ctx.query.cpage || '1', 10);
   if (cpage < 1) {
     ctx.status = 400;
     return;
   }
 
-  // 1. post data 획득
+  // 1. 조회 수 증가
   try {
     // 조회 수 증가
     const result = await Post.findOneAndUpdate(
@@ -94,6 +95,9 @@ export const read = async (ctx) => {
       { new: true },
     );
 
+    // comment 개수 획득
+    commentCount = result.comments.length;
+
     if (!result) {
       console.log('findOneAndUpdate Error');
     }
@@ -101,48 +105,23 @@ export const read = async (ctx) => {
     ctx.throw(500, e);
   }
 
-  // 2. Pagination된 post comment 획득
-  const query = {
-    ...{ postId: post._id },
-  };
-
-  let comments = await Comment.find(query)
-    .sort({ publishedDate: -1 })
-    .limit(10)
-    .skip((cpage - 1) * 10)
-    .lean()
-    .exec();
-
-  const commentCount = await Comment.countDocuments(query).exec();
-
+  // 2. cpage에 맞춘 comments획득, comments 전체 길이 획득
   try {
-    // TODO : Promise 해제하는 방식 확인
-    comments = await Promise.all(
-      comments.map(async (comment) => {
-        const ReplySchemas = await Promise.all(
-          comment.replyIds.map(async (replyId) => {
-            try {
-              const reply = await Reply.findById(replyId);
-              return reply;
-            } catch (e) {
-              ctx.throw(500, e);
-            }
-          }),
-        );
-        comment.replies = ReplySchemas;
-        return comment;
-      }),
+    const _ = await Post.findOne(
+      { _id: post._id },
+      { comments: { $slice: [(cpage - 1) * commentsNum, commentsNum] } },
+      { new: true },
     );
   } catch (e) {
     ctx.throw(500, e);
   }
+
   // Responese
-  // { post: {},comments: {}}
   const responseData = {
     commentTotalCnt: commentCount,
     data: {
       post,
-      comments,
+      // comments: post.comments,
     },
   };
 
@@ -247,13 +226,13 @@ export const like = async (ctx) => {
   // 해당 post에 좋아요를 눌렀던 사람인지 확인
   try {
     [ExistUser] = await Post.find({
+      _id: postId,
       likeMe: { $all: [user._id] },
     });
   } catch (e) {
     ctx.throw(500, e);
   }
 
-  console.log('[TEST] Existuser : ', ExistUser);
   // 좋아요를 누르지 않았던 User일 경우
   if (!ExistUser) {
     // 1. 좋아요 증가, User 저장
@@ -304,52 +283,5 @@ export const upLoadImage = async (ctx, next) => {
     ctx.body = files;
   } catch (e) {
     console.log(e);
-  }
-};
-
-/**
- * 특정 포스트 조회
- * GET /api/post/test/:postId
- */
-export const test = async (ctx) => {
-  const { postId } = ctx.params;
-
-  // match stage를 사용할 때 id 매칭 시 mongoose.Types.ObjectId를 사용해야함
-  const query = [
-    {
-      $match: { postId: mongoose.Types.ObjectId(postId) },
-    },
-    {
-      $unwind: '$replyIds',
-    },
-    {
-      $lookup: {
-        from: 'replies',
-        localField: 'replyIds',
-        foreignField: '_id',
-        as: 'replies',
-      },
-    },
-    {
-      $unwind: '$replies',
-    },
-    // {
-    //   $group: {
-    //     _id: '$_id',
-    //     text: { $first: '$text' },
-    //     user: { $first: '$user' },
-    //     likeMe: { $push: '$likeMe' },
-    //     replyIds: { $push: '$replyIds' },
-    //     replies: { $push: '$replies' },
-    //     publishedDate: { $first: '$publishedDate' },
-    //   },
-    // },
-  ];
-
-  try {
-    const result = await Comment.aggregate(query).exec();
-    ctx.body = result;
-  } catch (e) {
-    ctx.throw(500, e);
   }
 };
