@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node --watch src/ -r esm src/index.js"
+    "start": "nodemon --watch src/ -r esm src/index.js"
   },
   "repository": {
     "type": "git",
