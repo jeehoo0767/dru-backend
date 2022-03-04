@@ -10,10 +10,7 @@ import socketManager from "./lib/socketManager";
 const { PORT, MONGO_URI } = process.env;
 
 mongoose
-  .connect(
-    "mongodb+srv://root:1234@dru.frh6r.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
-    { useNewUrlParser: true }
-  )
+  .connect(MONGO_URI, { useNewUrlParser: true })
   .then(() => {
     console.log("Connected to MongoDB");
   })
