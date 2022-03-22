@@ -84,21 +84,41 @@ export const searchAll = async (ctx) => {
 
   // q 데이터를 저장
   const wordsList = q.split(' ');
-  console.log('wordlist :', wordsList);
+  let ExistWords;
+
+  try {
+    ExistWords = await Word.find();
+  } catch (e) {
+    console.log('Failed to find word list');
+  }
+
+  let ExistWordsList = [];
+  ExistWords.forEach((data, index, array) => {
+    ExistWordsList.push(data.data);
+  });
 
   wordsList.forEach(async (data, index, array) => {
-    console.log('data :', data);
-
-    // TODO : data가 있는 data을 경우 cnt만 증가
-    const word = new Word({
-      _id: mongoose.Types.ObjectId(),
-      data,
-      freq: 0,
-    });
-    try {
-      await word.save();
-    } catch (e) {
-      console.log('save word error');
+    if (ExistWordsList.includes(data)) {
+      try {
+        const _ = await Word.findOneAndUpdate(
+          { data: data },
+          { $inc: { freq: 1 } },
+          { new: false },
+        );
+      } catch (e) {
+        console.log('Failed to add freq of keyword');
+      }
+    } else {
+      const word = new Word({
+        _id: mongoose.Types.ObjectId(),
+        data,
+        freq: 1,
+      });
+      try {
+        await word.save();
+      } catch (e) {
+        console.log('Failed to save word');
+      }
     }
   });
 };
